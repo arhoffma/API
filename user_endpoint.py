@@ -26,12 +26,9 @@ class Users(Resource):
 		
 		args = parser.parse_args() # Parse arguments into dictionary
 		
+		data = pd.read_csv('users.csv') # Read dataframe
 		
-		
-		# Read and Append changes to datframe
-		data = pd.read_csv('users.csv') # Read
-		
-		# Check to see if new data conflicts with existing data
+		# Check if new data conflicts with existing data
 		if args['userId'] in list(data['userId']):
 			return{
 				'message': f"'{args['userId']}' already exists."
@@ -46,8 +43,11 @@ class Users(Resource):
 				'locations':[[]]
 			})
 		
+		# Append and save new users.csv
 		data = data.append(new_data, ignore_index = True) # Append
 		data.to_csv('users.csv', index = False) # Save new
+		
+		
 		return{'data': data.to_dict()}, 200 # Return data with 200 OK
 		
 	
