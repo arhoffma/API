@@ -46,10 +46,49 @@ class Users(Resource):
 		# Append and save new users.csv
 		data = data.append(new_data, ignore_index = True) # Append
 		data.to_csv('users.csv', index = False) # Save new
-		
-		
+				
 		return{'data': data.to_dict()}, 200 # Return data with 200 OK
 		
+	# PUT method appends data to existing user. Similar to POST method	
+	def put(self):
+		parser = reqparse.RequestParser() # Initialize 
+		
+		# Add arguments
+		parser.add_argument('userId', required = True)
+		parser.add_argument('location', required = True) 
+		
+		args = parser.parse_args() # Parse arguments into dictionary
+		
+		# Read csv
+		data = pd.read_csv('users.csv')
+		
+		# Check if user exists in data
+		if args['userId'] in list(data['userId']):
+			
+			# Evaluate strings of lists to lists
+			data['locations'] = data['locations'].apply(
+				lambda x: ast.literal_eval(x)
+			)
+			
+			# Select user
+			user_data = data[data['userId'] == args['userId']]
+			
+			# Update user location
+			user_data['locations'] = user_data['locations'].values[0] \
+				.append(args['location'])		
+				
+			# Save updated location to users.csv
+			data.to_csv('users.csv', index = False)
+			
+			# Return data and 200 OK
+			return{'data': data.to_dict()}, 200
+			
+		else:
+			# Otherwise userId does not exist
+			return{
+				'message': f"'{args['userId']}' user not found."
+				}, 404
+				
 	
 class Locations(Resource):
 
