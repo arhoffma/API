@@ -32,7 +32,7 @@ class Users(Resource):
 		if args['userId'] in list(data['userId']):
 			return{
 				'message': f"'{args['userId']}' already exists."
-			}, 69420
+			}, 404
 		
 		else:
 			# Create new dataframe containing new values
@@ -88,7 +88,36 @@ class Users(Resource):
 			return{
 				'message': f"'{args['userId']}' user not found."
 				}, 404
-				
+	
+	# DELETE method removes userId from users.csv			
+	def delete(self):
+		parser = reqparse.RequestParser() # initialize
+		
+		# Add arguments
+		parser.add_argument('userId', required = True)
+		
+		args = parser.parse_args() # Parse arguments to dictionary
+		
+		# Read csv
+		data = pd.read_csv('users.csv')
+		
+		# Check is user exists
+		if args['userId'] in list(data['userId']):
+			
+			# Remove user from users.csv
+			data = data[data['userId'] != args['userId']]
+			
+			# Save updated users.csv
+			data.to_csv('users.csv', index=False)
+			
+			# Return data and 200 OK
+			return {'data':  data.to_dict()}, 200
+		else:
+			# Return 404 if user does not exists
+			return {
+				'message': f"'{args['userId']}' user not found."
+			}, 404
+			
 	
 class Locations(Resource):
 
