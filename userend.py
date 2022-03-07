@@ -123,7 +123,7 @@ class Users(Resource):
 class Locations(Resource):
 
 	# methods go here
-	# GET method to return data stored in users.csv
+	# GET method to return data stored in locations.csv
 	def get(self):
 		data = pd.read_csv('locations.csv') # Read csv with pandas
 		#data = data.to_dict() # Convert dataframe to dictionary
