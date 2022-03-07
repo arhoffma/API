@@ -1,3 +1,4 @@
+
 from flask import Flask
 from flask_restful import Resource, Api, reqparse
 import pandas as pd
@@ -122,7 +123,86 @@ class Users(Resource):
 class Locations(Resource):
 
 	# methods go here
-	pass
+	# GET method to return data stored in users.csv
+	def get(self):
+		data = pd.read_csv('locations.csv') # Read csv with pandas
+		#data = data.to_dict() # Convert dataframe to dictionary
+		return {'data': data.to_dict()}, 200 # Return data and 200 OK code
+		
+		
+	# POST method to append data to locations.csv	
+	def post(self):
+		parser = reqparse.RequestParser() # initialize
+		# Add arguments
+		parser.add_argument('locationId', required = True, type=int) # Specify int value
+		parser.add_argument('name', required = True)
+		parser.add_argument('rating', required = True, type=float) # Specify float value
+		
+		args = parser.parse_args() # Parse arguments into dictionary
+		
+		data = pd.read_csv('locations.csv') # Read dataframe
+		
+		# Check if new data conflicts with existing data
+		if args['locationId'] in list(data['locationId']):
+			return{
+				'message': f"'{args['locationId']}' already exists."
+			}, 404
+		
+		else:
+			# Create new dataframe containing new values
+			new_data = pd.DataFrame({
+				'locationId': [args['locationId']],
+				'name': [args['name']],
+				'rating': [args['rating']],
+			})
+		
+		# Append and save new users.csv
+		data = data.append(new_data, ignore_index = True) # Append
+		data.to_csv('locations.csv', index = False) # Save new				
+		return{'data': data.to_dict()}, 200 # Return data with 200 OK
+		
+	# PUT method appends data to existing user. Similar to POST method	
+	def patch(self):
+		parser = reqparse.RequestParser() # Initialize parser
+		
+		# Add arguments
+		parser.add_argument('locationId', required = True, type=int)
+		parser.add_argument('name', store_missing = False) # Optional 
+		parser.add_argument('rating', store_missing = False) # Optional 
+		args = parser.parse_args() # Parse arguments into dictionary
+		
+		# Read csv
+		data = pd.read_csv('locations.csv')
+		
+		# Check if location exists in data
+		if args['locationId'] in list(data['locationId']):
+						
+			# Select locationId 
+			user_data = data[data['locationId'] == args['locationId']]
+			
+			# Update name if locationId exists
+			if 'name' in args:
+				user_data['name'] = args['name']		
+
+			# Update rating if locationId exists
+			if 'rating' in args:
+				user_data['rating'] = args['rating']
+				
+			# Update user data
+			data[data['locationId'] == args['locationId']] = user_data					
+				
+			# Save update to locations.csv
+			data.to_csv('locations.csv', index = False)
+			
+			# Return data and 200 OK
+			return{'data': data.to_dict()}, 200
+			
+		else:
+			# Otherwise userId does not exist
+			return{
+				'message': f"'{args['locationId']}' location not found."
+				}, 404
+	
 	
 api.add_resource(Users, '/users') # '/users' is the entry point for Users
 api.add_resource(Locations, '/locations') # '/locations' is entry point for Locations
