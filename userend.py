@@ -9,7 +9,6 @@ api = Api(app)
 
 class Users(Resource):
 
-
 	# GET method to return data stored in users.csv
 	def get(self):
 		data = pd.read_csv('users.csv') # Read csv with pandas
@@ -122,7 +121,6 @@ class Users(Resource):
 	
 class Locations(Resource):
 
-	# methods go here
 	# GET method to return data stored in locations.csv
 	def get(self):
 		data = pd.read_csv('locations.csv') # Read csv with pandas
@@ -168,7 +166,7 @@ class Locations(Resource):
 		# Add arguments
 		parser.add_argument('locationId', required = True, type=int)
 		parser.add_argument('name', store_missing = False) # Optional 
-		parser.add_argument('rating', store_missing = False) # Optional 
+		parser.add_argument('rating', store_missing = False, type=int) # Optional 
 		args = parser.parse_args() # Parse arguments into dictionary
 		
 		# Read csv
@@ -202,10 +200,50 @@ class Locations(Resource):
 			return{
 				'message': f"'{args['locationId']}' location not found."
 				}, 404
+		
+	# DELETE method removes locationId from locations.csv			
+	def delete(self):
+		
+		parser = reqparse.RequestParser() # initialize
+		parser.add_argument('locationId', required = True, type=int) # Add arguments, locationId
+		args = parser.parse_args() # Parse arguments to dictionary
+		
+		# Read csv
+		data = pd.read_csv('locations.csv')
+		
+		# Check is locationId exists
+		if args['locationId'] in list(data['locationId']):
+			# Remove lcoationId from locations.csv if it exists 
+			data = data[data['locationId'] != args['locationId']]
+			# Save updated locations.csv
+			data.to_csv('locations.csv', index=False)
+			# Return data and 200 OK
+			return {'data':  data.to_dict()}, 200
+		else:
+			# Return 404 if lcoation does not exists
+			return {
+				'message': f"'{args['locationId']}' location not found."
+			}, 404
 	
 	
+class Obesity(Resource):
+
+	# GET method returns data from obesity.csv
+	def get(self):
+		data = pd.read_csv('obesity.csv') # Read csv with pandas
+		#data = data.to_dict() # Convert dataframe to dictionary
+		return {'data': data.to_dict()}, 200 # Return data and 200 OK code
+
+	def put(self):
+		pass
+	def post(self):
+		pass
+	def delete(self):
+		pass
+		
 api.add_resource(Users, '/users') # '/users' is the entry point for Users
 api.add_resource(Locations, '/locations') # '/locations' is entry point for Locations
+api.add_resource(Obesity, '/obesity') # '/obesity' is the entry point for Obesity
 
 if __name__ == '__main__':
 	app.run() # run Flask app
